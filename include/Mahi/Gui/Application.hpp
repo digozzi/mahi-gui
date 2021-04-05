@@ -29,7 +29,8 @@
 #include <Mahi/Gui/Coroutine.hpp>
 #endif
 
-struct ImGuiContext;  ///< forward declaration
+struct ImGuiContext;
+struct ImPlotContext;
 
 namespace mahi {
 namespace gui {
@@ -39,20 +40,22 @@ class Application {
 public:
     /// Application Configuration options (for advanced Application construction)
     struct Config {
-        std::string title = "mahi-gui";    ///< window title
-        int  width        = 640;           ///< window width in pixels
-        int  height       = 480;           ///< window height in pixels
-        int  monitor      = 0;             ///< monitor the window will be on
-        bool fullscreen   = false;         ///< should the window be fullscreen?
-        bool resizable    = true;          ///< should the window be resizable?
-        bool visible      = true;          ///< should the window be visible?
-        bool decorated    = true;          ///< should the window have a title bar, close button, etc.?
-        bool transparent  = false;         ///< should the window area be transparent?
-        bool center       = true;          ///< should the window be centered to the monitor?
-        int  msaa         = 4;             ///< multisample anti-aliasing level (0 = none, 2, 4, 8, etc.)
-        bool nvg_aa       = true;          ///< should NanoVG use anti-aliasing?
-        bool vsync        = true;          ///< should VSync be enabled?
-        Color background  = {0, 0, 0, 1};  ///< OpenGL clear color, i.e. window background color
+        std::string title      = "mahi-gui"; ///< window title
+        int  width             = 640;        ///< window width in pixels
+        int  height            = 480;        ///< window height in pixels
+        int  monitor           = 0;          ///< monitor the window will be on
+        bool fullscreen        = false;      ///< should the window be fullscreen?
+        bool resizable         = true;       ///< should the window be resizable?
+        bool visible           = true;       ///< should the window be visible?
+        bool decorated         = true;       ///< should the window have a title bar, close button, etc.?
+        bool transparent       = false;      ///< should the window area be transparent?
+        bool center            = true;       ///< should the window be centered to the monitor?
+        int  msaa              = 4;          ///< multisample anti-aliasing level (0 = none, 2, 4, 8, etc.)
+        bool nvg_aa            = true;       ///< should NanoVG use anti-aliasing?
+        bool vsync             = true;       ///< should VSync be enabled?
+        bool dpi_aware         = false;      ///< does the application scale for high DPI? (WIP, DO NOT USE!!!)
+        bool gl_forward_compat = true;       ///< should GLFW_OPENGL_FORWARD_COMPAT be set? Always set on Mac.
+        Color background  = {0, 0, 0, 1};    ///< OpenGL clear color, i.e. window background color
     };
 
     /// Hidden Main Window Constructor (for using ImGui windows exclusively)
@@ -116,15 +119,17 @@ public:
     Vec2 get_framebuffer_size() const;
     /// Get pixel ratio (FB width / window width) for high DPI screens
     float get_pixel_ratio() const;
+    /// Get the DPI scaling factor if enabled
+    float get_dpi_scale() const;
     /// Enable/disable VSync
     void set_vsync(bool enabled);
     /// Sets a target framelimit in hertz and disables VSync (pass 0 for no limit)
     void set_frame_limit(util::Frequency freq);
-
-    // TODO: Input API (use ImGui for now)
-
-    /// Get the mouse position
+   /// Get the mouse position
     Vec2 get_mouse_pos() const;
+
+    /// Get the app's configuration
+    const Config& get_config() const;
 
 #ifdef MAHI_COROUTINES
     /// Starts a coroutine
@@ -185,13 +190,14 @@ protected:
     NVGcontext* m_vg;
 
 private:
-    ImGuiContext* m_imgui_context;  ///< ImGui context of this application
-    Config        m_conf;           ///< Application configuration
-    util::Time    m_frame_time;     ///< target time to sleep to each frame if VSync is disabled
-    util::Time    m_dt;             ///< delta time (scaled)
-    util::Time    m_time;           ///< Application time (scaled)
-    float         m_time_scale;     ///< time scale (default = 1, no scale)
-    Profile       m_profile;        ///< most recent Profile
+    ImGuiContext*  m_imgui_context;  ///< ImGui context of this application
+    ImPlotContext* m_implot_context; ///< ImPlot context of this application
+    Config         m_conf;           ///< Application configuration
+    util::Time     m_frame_time;     ///< target time to sleep to each frame if VSync is disabled
+    util::Time     m_dt;             ///< delta time (scaled)
+    util::Time     m_time;           ///< Application time (scaled)
+    float          m_time_scale;     ///< time scale (default = 1, no scale)
+    Profile        m_profile;        ///< most recent Profile
 #ifdef MAHI_COROUTINES
     std::vector<util::Enumerator> m_coroutines;  /// Vector of running coroutines
 #endif
